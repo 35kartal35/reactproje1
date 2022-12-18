@@ -2,22 +2,44 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 
 function App() {
-  const [todolar, setTodolar] = useState(null)
-  const [title, setTitle] = useState("")
-  const [resalt, setResalt] = useState(false)
-  const [resaltMessage, setResaltMessage] = useState("")
+  const [todolar, setTodolar] = useState(null);
+  const [title, setTitle] = useState("");
+  const [resalt, setResalt] = useState(false);
+  const [resaltMessage, setResaltMessage] = useState("");
+  const [duzenlemeVarMi, setDuzenlemeVarMi] = useState(false);
+  const [duzenlenecekTodo, setDuzenlenecekTodo] = useState(null)
+  const [duzenlenecekTitle, setDuzenlenecekTitle] = useState("")
 
-  const todoSil=(id)=>{
+
+  const todoSil = (id) => {
     axios.delete(`http://localhost:3004/todos/${id}`)
-    .then((response)=>{
-      setResalt(true)
-      setResaltMessage("Silme işlemi başarili")
-    })
-    .catch((error)=>{
-      setResalt(true)
-      setResaltMessage("Silme işlemi esnasinda bir hata oldu")
+      .then((response) => {
+        setResalt(true)
+        setResaltMessage("Silme işlemi başarili")
+      })
+      .catch((error) => {
+        setResalt(true)
+        setResaltMessage("Silme işlemi esnasinda bir hata oldu")
 
-    })
+      })
+  }
+  const changeTodosCompleted = (todo) => {
+    console.log(todo)
+    const updatedTodo = {
+      ...todo,
+      completed: !todo.completed
+
+    }
+    axios.put(`http://localhost:3004/todos/${todo.id}`, updatedTodo)
+      .then((response) => {
+        setResalt(true)
+        setResaltMessage("Todo başarıyla güncellendi")
+      })
+      .catch((error) => {
+        setResalt(true)
+        setResaltMessage("Todo güncellenirken bir hata oluştu")
+      })
+
   }
 
   useEffect(() => {
@@ -25,7 +47,7 @@ function App() {
       .then((response) => {
         console.log(response.data)
         setTodolar(response.data);
-              })
+      })
       .catch((error) => {
         console.log(error)
       });
@@ -49,7 +71,7 @@ function App() {
 
     axios.post("http://localhost:3004/todos", newTodo)
       .then((response) => {
-        
+
         setTitle("");
         setResalt(true)
         setResaltMessage("Kayıt işlemi başarılı")
@@ -62,7 +84,31 @@ function App() {
       })
 
   }
-  if (todolar === null) {
+
+  const todoGuncelleFormunuDenetle=(event)=>{
+    event.preventDefault()
+    if(duzenlenecekTitle===""){
+      alert("Title boş bırakılamaz")
+      return
+    }
+    const updatedTodo={
+      ...duzenlenecekTodo,
+      title: duzenlenecekTitle
+    }
+
+    axios.put(`http://localhost:3004/todos/${duzenlenecekTodo.id}`,updatedTodo)
+    .then((response)=>{
+      setResalt(true)
+      setResaltMessage("Güncelleme işlemi başarılı")
+      setDuzenlemeVarMi(false)
+    })
+    .catch((error)=>{
+      setResalt(true)
+      setResaltMessage("Güncelleme işlemi Esnasında bir hata oluştu")
+    })
+  }
+
+   if (todolar === null){
     return null
   }
 
@@ -92,41 +138,83 @@ function App() {
       <div className="row my-5">
         <form onSubmit={formuDenetle}>
           <div className="input-group mb-3">
-            <input type="text"
+            <input
+              type="text"
               className="form-control"
               placeholder="Type your todo..."
               value={title}
               onChange={(event) => setTitle(event.target.value)}
             />
             <button
-              className="btn btn-primary" type="submit">Add
+              className="btn btn-primary" type="submit">Ekle
             </button>
           </div>
         </form>
       </div>
-      {todolar.map((todo) => (
-        <div key={todo.id} className="alert alert-secondary d-flex justify-content-between align-items-center" role="alert">
-          <div>
-            <h1>{todo.title}</h1>
-            <p>{new Date(todo.date).toLocaleString()}</p>
-          </div>
-          <div>
-            <div class="btn-group" role="group" aria-label="Basic example">
-              <button type="button" class="btn btn-warning">Düzenle</button>
-              <button onClick={()=>todoSil(todo.id)} type="button" class="btn btn-danger">Sil</button>
-              <button type="button" class="btn btn-primary">
-                {
-                  todo.completed === true ? "Yapılmadı" : "Yapıldı" 
-                }
+      {duzenlemeVarMi === true && (
+        <div className="row my-5">
+          <form onSubmit={todoGuncelleFormunuDenetle}>
+            <div className="input-group mb-3">
+              <input
+                type="text"
+                className="form-control"
+                placeholder="yapılacak işi girin..."
+                value={duzenlenecekTitle}
+                onChange={(event) =>setDuzenlenecekTitle(event.target.value)}
+              />
+              <button
+                onClick={() => setDuzenlemeVarMi(false)}
+                className="btn btn-danger"
+              >
+                Vazgeç
+              </button>
+              <button className="btn btn-primary" type="submit">
+                Güncelle
               </button>
             </div>
+          </form>
           </div>
-        </div>
-      ))
+        )}
+          {todolar.map((todo) => (
+            <div key={todo.id} className="alert alert-secondary d-flex justify-content-between align-items-center" role="alert">
+              <div>
+                <h1
+                  style={{
+                    textDecoration:
+                      todo.completed === true ? "line-through" : "none",
+                    color: todo.completed === true ? "red" : "blue"
+                  }}>{todo.title}</h1>
+                <p>{new Date(todo.date).toLocaleString()}</p>
+              </div>
+              <div>
+                <div class="btn-group" role="group" aria-label="Basic example">
+                  <button 
+                  onClick={()=>{
+                    setDuzenlemeVarMi(true);
+                    setDuzenlenecekTodo(todo)
+                    setDuzenlenecekTitle(todo.title)
+                  }}
+                  type="button" 
+                  class="btn btn-warning">
+                    Düzenle
+                    </button>
+                  <button onClick={() => todoSil(todo.id)} 
+                  type="button" class="btn btn-danger">
+                    Sil
+                    </button>
+                  <button onClick={() => changeTodosCompleted(todo)}
+                    type="button"
+                    class="btn btn-primary">
+                    {todo.completed === true ? "Yapılmadı" : "Yapıldı"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))
 
-      }
-    </div>
-  );
+          }
+        </div>
+      );
 }
 
-export default App;
+      export default App;

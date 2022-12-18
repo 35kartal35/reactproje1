@@ -1,3 +1,22 @@
 {
-  "todos": []
+  "todos": [
+    {
+      "id": "1671348165797",
+      "title": "memiş",
+      "date": "2022-12-18T07:22:45.797Z",
+      "completed": false
+    },
+    {
+      "id": "1671348177100",
+      "title": "todo2",
+      "date": "2022-12-18T07:22:57.100Z",
+      "completed": false
+    },
+    {
+      "id": "1671380013031",
+      "title": "todo3",
+      "date": "2022-12-18T16:13:33.031Z",
+      "completed": false
+    }
+  ]
 }
